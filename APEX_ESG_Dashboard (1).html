@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX Vendor ESG Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy:    #0B1F3A;
+  --navy2:   #112847;
+  --teal:    #00C2CB;
+  --teal2:   #00969D;
+  --gold:    #F5A623;
+  --green:   #27AE60;
+  --red:     #E74C3C;
+  --amber:   #F39C12;
+  --white:   #FFFFFF;
+  --off:     #F0F4F8;
+  --muted:   #8B9BB4;
+  --border:  rgba(255,255,255,0.08);
+  --card:    rgba(255,255,255,0.04);
+  --card2:   rgba(0,194,203,0.07);
+  --glow:    0 0 40px rgba(0,194,203,0.12);
+  --shadow:  0 4px 24px rgba(0,0,0,0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(0,194,203,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(245,166,35,0.07) 0%, transparent 55%),
+    linear-gradient(180deg, #0B1F3A 0%, #091829 100%);
+  pointer-events: none;
+}
+
+.wrap { position: relative; z-index: 1; padding: 28px 32px; max-width: 1600px; margin: 0 auto; }
+
+/* ── HEADER ── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 32px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-block { display: flex; align-items: center; gap: 14px; }
+.logo-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--teal), var(--teal2));
+  display: grid; place-items: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px;
+  color: var(--navy); box-shadow: 0 0 20px rgba(0,194,203,0.35);
+}
+.logo-text h1 {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 22px; letter-spacing: -0.3px;
+}
+.logo-text p { font-size: 12px; color: var(--muted); margin-top: 1px; font-weight: 300; }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.badge {
+  display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+  border-radius: 100px; border: 1px solid var(--border);
+  font-size: 12px; color: var(--muted); font-weight: 500;
+  background: var(--card);
+}
+.badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+.filter-bar { display: flex; align-items: center; gap: 8px; }
+.filter-btn {
+  padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border);
+  background: var(--card); color: var(--muted); font-size: 12px;
+  cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s;
+}
+.filter-btn.active, .filter-btn:hover {
+  border-color: var(--teal); color: var(--teal);
+  background: rgba(0,194,203,0.1);
+}
+
+/* ── KPI STRIP ── */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px 22px;
+  position: relative; overflow: hidden;
+  transition: transform .25s, box-shadow .25s;
+  cursor: default;
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--glow); }
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 16px 16px 0 0;
+}
+.kpi-card.teal::before  { background: linear-gradient(90deg, var(--teal), var(--teal2)); }
+.kpi-card.green::before { background: linear-gradient(90deg, var(--green), #1e8449); }
+.kpi-card.amber::before { background: linear-gradient(90deg, var(--amber), #d68910); }
+.kpi-card.red::before   { background: linear-gradient(90deg, var(--red), #c0392b); }
+.kpi-card.gold::before  { background: linear-gradient(90deg, var(--gold), #d4881a); }
+.kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+.kpi-value {
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 38px;
+  line-height: 1.1; margin: 8px 0 4px;
+}
+.kpi-card.teal  .kpi-value { color: var(--teal); }
+.kpi-card.green .kpi-value { color: var(--green); }
+.kpi-card.amber .kpi-value { color: var(--amber); }
+.kpi-card.red   .kpi-value { color: var(--red); }
+.kpi-card.gold  .kpi-value { color: var(--gold); }
+.kpi-sub { font-size: 11px; color: var(--muted); font-weight: 300; }
+.kpi-icon {
+  position: absolute; right: 18px; top: 18px;
+  font-size: 28px; opacity: 0.15;
+}
+
+/* ── LAYOUT ROWS ── */
+.row { display: grid; gap: 16px; margin-bottom: 16px; }
+.row-3 { grid-template-columns: 1.6fr 1fr 1.2fr; }
+.row-2 { grid-template-columns: 1.4fr 1fr; }
+.row-full { grid-template-columns: 1fr; }
+
+/* ── CHART CARDS ── */
+.chart-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px 24px;
+  transition: box-shadow .25s;
+}
+.chart-card:hover { box-shadow: var(--glow); }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--white); }
+.card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.card-tag {
+  font-size: 10px; font-weight: 600; padding: 3px 10px;
+  border-radius: 100px; text-transform: uppercase; letter-spacing: .5px;
+}
+.tag-teal { background: rgba(0,194,203,0.15); color: var(--teal); }
+.tag-green { background: rgba(39,174,96,0.15); color: var(--green); }
+.tag-amber { background: rgba(243,156,18,0.15); color: var(--amber); }
+.tag-red { background: rgba(231,76,60,0.15); color: var(--red); }
+.chart-wrap { position: relative; }
+.chart-wrap canvas { max-width: 100%; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th {
+  text-align: left; padding: 8px 12px; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border);
+}
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background .15s; }
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+tbody td { padding: 9px 12px; color: rgba(255,255,255,0.85); }
+.rank {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px;
+  font-weight: 700; font-size: 11px; font-family: 'Syne', sans-serif;
+  background: rgba(0,194,203,0.15); color: var(--teal);
+}
+.score-pill {
+  display: inline-block; padding: 2px 10px; border-radius: 100px;
+  font-weight: 700; font-size: 12px;
+}
+.perf-badge {
+  display: inline-block; padding: 3px 9px; border-radius: 100px;
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+}
+.perf-high   { background: rgba(39,174,96,0.18); color: var(--green); }
+.perf-avg    { background: rgba(243,156,18,0.18); color: var(--amber); }
+.perf-low    { background: rgba(231,76,60,0.18); color: var(--red); }
+
+/* ── GAUGE ── */
+.gauges { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 8px; }
+.gauge-item { text-align: center; }
+.gauge-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+.gauge-ring { position: relative; display: inline-block; }
+.gauge-ring canvas { display: block; }
+.gauge-center {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px;
+}
+
+/* ── SCATTER / BUBBLE ── */
+.pillar-bars { margin-top: 8px; }
+.pillar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.pillar-name { width: 36px; font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+.pillar-track { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.pillar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+.pillar-val { width: 34px; text-align: right; font-size: 12px; font-weight: 600; font-family: 'Syne', sans-serif; }
+
+/* ── FOOTER ── */
+footer {
+  margin-top: 28px; padding-top: 18px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--muted);
+}
+.footer-stats { display: flex; gap: 24px; }
+.footer-stat span { color: var(--teal); font-weight: 600; }
+
+/* ── ANIMATIONS ── */
+.fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp .5s forwards; }
+@keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+.kpi-card:nth-child(1) { animation-delay: .05s }
+.kpi-card:nth-child(2) { animation-delay: .1s }
+.kpi-card:nth-child(3) { animation-delay: .15s }
+.kpi-card:nth-child(4) { animation-delay: .2s }
+.kpi-card:nth-child(5) { animation-delay: .25s }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="logo-block">
+    <div class="logo-icon">A</div>
+    <div class="logo-text">
+      <h1>APEX Vendor ESG Dashboard</h1>
+      <p>Environmental · Social · Governance Assessment Report</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="badge"><span class="dot"></span> 62 Completed Assessments</div>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterPerf('All',this)">All</button>
+      <button class="filter-btn" onclick="filterPerf('High Performance',this)">High</button>
+      <button class="filter-btn" onclick="filterPerf('Average Performance',this)">Average</button>
+      <button class="filter-btn" onclick="filterPerf('Low Performance',this)">Low</button>
+    </div>
+  </div>
+</header>
+
+<!-- KPI CARDS -->
+<div class="kpi-grid">
+  <div class="kpi-card teal fade-up">
+    <div class="kpi-icon">🏢</div>
+    <div class="kpi-label">Total Vendors</div>
+    <div class="kpi-value" id="kpi-total">62</div>
+    <div class="kpi-sub">Assessments completed</div>
+  </div>
+  <div class="kpi-card green fade-up">
+    <div class="kpi-icon">📈</div>
+    <div class="kpi-label">Avg ESG Score</div>
+    <div class="kpi-value" id="kpi-avg">77.4</div>
+    <div class="kpi-sub">Out of 100</div>
+  </div>
+  <div class="kpi-card gold fade-up">
+    <div class="kpi-icon">⭐</div>
+    <div class="kpi-label">High Performers</div>
+    <div class="kpi-value" id="kpi-high">10</div>
+    <div class="kpi-sub">Vendors ≥ 85 ESG</div>
+  </div>
+  <div class="kpi-card amber fade-up">
+    <div class="kpi-icon">📊</div>
+    <div class="kpi-label">Avg Performers</div>
+    <div class="kpi-value" id="kpi-avg-p">51</div>
+    <div class="kpi-sub">Moderate ESG score</div>
+  </div>
+  <div class="kpi-card red fade-up">
+    <div class="kpi-icon">⚠️</div>
+    <div class="kpi-label">Need Improvement</div>
+    <div class="kpi-value" id="kpi-low">1</div>
+    <div class="kpi-sub">Low governance risk</div>
+  </div>
+</div>
+
+<!-- ROW 1: Top10 Table | Donut | Pillar Scores -->
+<div class="row row-3">
+
+  <!-- TOP 10 TABLE -->
+  <div class="chart-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">🏆 Top Performing Vendors</div>
+        <div class="card-sub">Ranked by Overall ESG Score</div>
+      </div>
+      <span class="card-tag tag-green">Top 10</span>
+    </div>
+    <div class="table-wrap">
+      <table id="top10-table">
+        <thead><tr><th>#</th><th>Vendor</th><th>Score</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DONUT CHART -->
+  <div class="chart-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Performance Split</div>
+        <div class="card-sub">By performance tier</div>
+      </div>
+      <span class="card-tag tag-teal">All Vendors</span>
+    </div>
+    <div class="chart-wrap" style="height:220px;display:flex;align-items:center;justify-content:center;">
+      <canvas id="donutChart" width="220" height="220"></canvas>
+    </div>
+    <div style="display:flex;justify-content:center;gap:18px;margin-top:12px;font-size:11px;">
+      <span style="display:flex;align-items:center;gap:5px;color:var(--green)">
+        <span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>High
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;color:var(--amber)">
+        <span style="width:8px;height:8px;border-radius:2px;background:var(--amber);display:inline-block"></span>Average
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;color:var(--red)">
+        <span style="width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block"></span>Low
+      </span>
+    </div>
+  </div>
+
+  <!-- PILLAR AVERAGES + GAUGES -->
+  <div class="chart-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">ESG Pillar Averages</div>
+        <div class="card-sub">Environmental · Governance scores</div>
+      </div>
+      <span class="card-tag tag-amber">Pillars</span>
+    </div>
+    <div class="gauges">
+      <div class="gauge-item">
+        <div class="gauge-label">ESG</div>
+        <div class="gauge-ring">
+          <canvas id="g1" width="90" height="90"></canvas>
+          <div class="gauge-center" style="color:var(--teal)">77.4</div>
+        </div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">ENV</div>
+        <div class="gauge-ring">
+          <canvas id="g2" width="90" height="90"></canvas>
+          <div class="gauge-center" style="color:var(--green)">74.0</div>
+        </div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">GOV</div>
+        <div class="gauge-ring">
+          <canvas id="g3" width="90" height="90"></canvas>
+          <div class="gauge-center" style="color:var(--amber)">74.6</div>
+        </div>
+      </div>
+    </div>
+    <div class="pillar-bars" style="margin-top:20px;">
+      <div class="pillar-row">
+        <div class="pillar-name">ESG</div>
+        <div class="pillar-track"><div class="pillar-fill" style="width:77.4%;background:linear-gradient(90deg,var(--teal),var(--teal2))"></div></div>
+        <div class="pillar-val" style="color:var(--teal)">77.4</div>
+      </div>
+      <div class="pillar-row">
+        <div class="pillar-name">ENV</div>
+        <div class="pillar-track"><div class="pillar-fill" style="width:74%;background:linear-gradient(90deg,var(--green),#1e8449)"></div></div>
+        <div class="pillar-val" style="color:var(--green)">74.0</div>
+      </div>
+      <div class="pillar-row">
+        <div class="pillar-name">GOV</div>
+        <div class="pillar-track"><div class="pillar-fill" style="width:74.6%;background:linear-gradient(90deg,var(--amber),#d68910)"></div></div>
+        <div class="pillar-val" style="color:var(--amber)">74.6</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROW 2: Category Bar | Score Distribution -->
+<div class="row row-2">
+
+  <!-- CATEGORY HORIZONTAL BAR -->
+  <div class="chart-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">📦 Avg ESG Score by Category</div>
+        <div class="card-sub">Top 12 vendor categories ranked</div>
+      </div>
+      <span class="card-tag tag-teal">Categories</span>
+    </div>
+    <div class="chart-wrap" style="height:320px;">
+      <canvas id="catBar"></canvas>
+    </div>
+  </div>
+
+  <!-- ESG SCORE HISTOGRAM / DISTRIBUTION -->
+  <div class="chart-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">📉 Score Distribution</div>
+        <div class="card-sub">Number of vendors per ESG score band</div>
+      </div>
+      <span class="card-tag tag-amber">Spread</span>
+    </div>
+    <div class="chart-wrap" style="height:320px;">
+      <canvas id="histChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ROW 3: Full ranking bar chart -->
+<div class="row row-full">
+  <div class="chart-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">📋 All Vendor ESG Scores — Ranked</div>
+        <div class="card-sub" id="ranking-sub">62 completed assessments · click filter above to highlight</div>
+      </div>
+      <span class="card-tag tag-teal" id="ranking-tag">Full View</span>
+    </div>
+    <div class="chart-wrap" style="height:340px;">
+      <canvas id="allBar"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ROW 4: Low Governance Table -->
+<div class="row row-full">
+  <div class="chart-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">⚠ Vendors Requiring Governance Improvement</div>
+        <div class="card-sub">Lowest governance scores — flagged for corrective action</div>
+      </div>
+      <span class="card-tag tag-red">Risk Flags</span>
+    </div>
+    <div class="table-wrap">
+      <table id="low-gov-table">
+        <thead><tr><th>#</th><th>Vendor</th><th>Category</th><th>Gov Score</th><th>ESG Score</th><th>Performance</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-stats">
+    <div>Total Vendors: <span>64</span></div>
+    <div>Assessed: <span>62</span></div>
+    <div>Pending: <span>2</span></div>
+    <div>Avg ESG: <span>77.4</span></div>
+    <div>Avg Gov: <span>74.6</span></div>
+    <div>Avg Env: <span>74.0</span></div>
+  </div>
+  <div>APEX Vendor ESG Assessment · Confidential</div>
+</footer>
+
+</div><!-- /wrap -->
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+const RAW = [{"VENDOR":"Global Ventures Limited","CATEGORY":"Building and Construction","ENV":75.0,"SOCIAL":0.0,"GOV":55.0,"ESG_SCORE":60.0,"PERF":"Low Performance","STATUS":"Completed"},{"VENDOR":"Crest Services Co. Ltd","CATEGORY":"Fire Equipments","ENV":60.0,"SOCIAL":0.0,"GOV":85.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Eagle Systems Company","CATEGORY":"PPE supply","ENV":65.0,"SOCIAL":0.0,"GOV":51.0,"ESG_SCORE":70.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Summit Holdings Ltd","CATEGORY":"Fire Equipments","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Delta Group Group Ltd","CATEGORY":"Fire Equipment","ENV":70.0,"SOCIAL":0.0,"GOV":70.0,"ESG_SCORE":70.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Titan Associates Ltd","CATEGORY":"Fire Equipment","ENV":70.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Sigma Partners International Ltd","CATEGORY":"Fire Protection System/Engineering Services","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Falcon Technologies Ltd","CATEGORY":"Plant Instrument","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Ridge Industries Nig. Ltd","CATEGORY":"Plant Compressors","ENV":70.0,"SOCIAL":0.0,"GOV":70.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Nexus Concepts Ltd","CATEGORY":"Electrical/Mechanical  Equipment","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Orbit Dynamics Ltd","CATEGORY":"Fuel","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":70.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Vertex Networks Ltd","CATEGORY":"Water Treatment Chemicals","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Cylon Logistics Limited","CATEGORY":"Water Treatment Chemicals","ENV":75.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Helix Innovations Ltd","CATEGORY":"Hospital Drugs","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Polar Operations Ltd","CATEGORY":"Cleaning Materials","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Vance Works Ltd","CATEGORY":"Cleaning Materials","ENV":75.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Monro Agency Ltd","CATEGORY":"Environmental Services","ENV":75.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":78.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Steller Integrated Ltd","CATEGORY":"Environmental Services","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":78.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Cobalt Global Ltd","CATEGORY":"Medical Equipments","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Lumex International Ltd","CATEGORY":"Cleaning Materials","ENV":75.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Torque Advanced Ltd","CATEGORY":"Construction and Building Materials","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Flexo Professional Ltd","CATEGORY":"Local Contractor Services","ENV":70.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Stride Technical Ltd","CATEGORY":"Local Contractor Services","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Nova Industrial Ltd","CATEGORY":"Local Contractor Services","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Zenith Commercial Ltd","CATEGORY":"Electrical Equipment","ENV":75.0,"SOCIAL":0.0,"GOV":65.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Cyrus Engineering Ltd","CATEGORY":"Electrical Equipments&Installations","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Maxfield Supply Ltd","CATEGORY":"Critical Plant Spares","ENV":65.0,"SOCIAL":0.0,"GOV":51.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Horizon Trade Ltd","CATEGORY":"Mechanical equipment","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":72.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Cascade Commerce Ltd","CATEGORY":"Mechanical Equipment","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":73.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Meridian Capital Ltd","CATEGORY":"Supply and Installationof  Aluminium &Metal Works","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Solaris Asset Ltd","CATEGORY":"Fabrication and Installations of all kinds of Aluminium &Metal Works","ENV":75.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":78.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Dextra Link Ltd","CATEGORY":"Water Treatment equipments","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Grandex Core Ltd","CATEGORY":"Electrical equipment and installations","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Sterling Prime Ltd","CATEGORY":"Agro-Allied Products and Equipment","ENV":75.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Crestline Base Ltd","CATEGORY":"Electrical materials/Reagents","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Ironclad Force Ltd","CATEGORY":"Fuel","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":70.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Radiant Connect Ltd","CATEGORY":"Mechanic and General services","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Blueridge Build Ltd","CATEGORY":"Building and Construction","ENV":75.0,"SOCIAL":0.0,"GOV":70.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Silverton Craft Ltd","CATEGORY":"Building and Construction","ENV":75.0,"SOCIAL":0.0,"GOV":70.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Goldfield Forge Ltd","CATEGORY":"Building and construction","ENV":85.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":83.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Stronghold Shape Ltd","CATEGORY":"Uniforms","ENV":75.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":80.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Fairway Drive Ltd","CATEGORY":"Dam Mintenance Instruments","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Broadmoor Flow Ltd","CATEGORY":"Building and Construction","ENV":80.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":78.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Copperton Grow Ltd","CATEGORY":"Supply of Eleftrical materials and Spares","ENV":70.0,"SOCIAL":0.0,"GOV":61.0,"ESG_SCORE":70.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Greenvale Lead Ltd","CATEGORY":"Mechanical consumables and Tools","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Whitmore Move Ltd","CATEGORY":"Medical Laboratory reagents","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Redstone Provide Ltd","CATEGORY":"Critical Plant Spares","ENV":75.0,"SOCIAL":0.0,"GOV":90.0,"ESG_SCORE":90.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Blackwood Execute Limited","CATEGORY":"Electrical Equipment","ENV":85.0,"SOCIAL":0.0,"GOV":85.0,"ESG_SCORE":85.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Clearwater Process Co. Ltd","CATEGORY":"Mechanical Materials","ENV":85.0,"SOCIAL":0.0,"GOV":85.0,"ESG_SCORE":85.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Ashford Transform Nigeria Limited","CATEGORY":"Mechanical Materials ","ENV":70.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":90.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Dunmore Develop Ltd","CATEGORY":"Bearings","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":85.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Elmwood Enable Co. Ltd","CATEGORY":"Tires","ENV":75.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":85.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Foxdale Sustain Ltd","CATEGORY":"Lubricants","ENV":75.0,"SOCIAL":0.0,"GOV":90.0,"ESG_SCORE":83.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Glenbrook Empower Enterprises","CATEGORY":"Electrical Equipment  ","ENV":70.0,"SOCIAL":0.0,"GOV":85.0,"ESG_SCORE":90.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Hartwell Equip Nigeria Limited","CATEGORY":"Building and construction","ENV":85.0,"SOCIAL":0.0,"GOV":80.0,"ESG_SCORE":83.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Stonecrest Serve Nig. Ltd","CATEGORY":"Supply,Installation of Electrical Equipment","ENV":75.0,"SOCIAL":0.0,"GOV":85.0,"ESG_SCORE":90.0,"PERF":"High Performance","STATUS":"Completed"},{"VENDOR":"Bright Solutions Ltd","CATEGORY":"Construction and Building Materials","ENV":70.0,"SOCIAL":0.0,"GOV":65.0,"ESG_SCORE":68.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Prime Resources Nigeria Limited","CATEGORY":"Mechanical consumables and Tools","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Swift Enterprises Co. Ltd","CATEGORY":"Motorcycle Spares","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Pinnacle Technologies Ltd","CATEGORY":"Construction and Building Materials","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Horizon Logistics Limited","CATEGORY":"Local Contractor Services","ENV":75.0,"SOCIAL":0.0,"GOV":65.0,"ESG_SCORE":70.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Cascade Professional Ltd","CATEGORY":"Security Services","ENV":75.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":75.0,"PERF":"Average Performance","STATUS":"Completed"},{"VENDOR":"Solaris Technical Ltd","CATEGORY":"Mechanical equipment","ENV":70.0,"SOCIAL":0.0,"GOV":75.0,"ESG_SCORE":73.0,"PERF":"Average Performance","STATUS":"Completed"}];
+
+let currentFilter = 'All';
+let filteredData = [...RAW];
+
+// ── HELPERS ─────────────────────────────────────────────────
+const COLORS = {
+  'High Performance': '#27AE60',
+  'Average Performance': '#F39C12',
+  'Low Performance': '#E74C3C'
+};
+
+function getFilteredData(filter) {
+  return filter === 'All' ? [...RAW] : RAW.filter(d => d.PERF === filter);
+}
+
+function perfBadge(p) {
+  const cls = p === 'High Performance' ? 'perf-high' : p === 'Low Performance' ? 'perf-low' : 'perf-avg';
+  const label = p === 'High Performance' ? 'High' : p === 'Low Performance' ? 'Low' : 'Average';
+  return `<span class="perf-badge ${cls}">${label}</span>`;
+}
+
+function scoreColor(s) {
+  return s >= 85 ? 'var(--green)' : s < 70 ? 'var(--red)' : 'var(--teal)';
+}
+
+// ── TOP 10 TABLE ─────────────────────────────────────────────
+function buildTop10() {
+  const sorted = [...filteredData].sort((a,b) => b.ESG_SCORE - a.ESG_SCORE).slice(0,10);
+  const tbody = document.querySelector('#top10-table tbody');
+  tbody.innerHTML = sorted.map((d,i) => `
+    <tr>
+      <td><span class="rank">${i+1}</span></td>
+      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.VENDOR}</td>
+      <td><span class="score-pill" style="color:${scoreColor(d.ESG_SCORE)};background:rgba(0,194,203,0.08)">${d.ESG_SCORE}</span></td>
+      <td>${perfBadge(d.PERF)}</td>
+    </tr>`).join('');
+}
+
+// ── LOW GOV TABLE ─────────────────────────────────────────────
+function buildLowGov() {
+  const sorted = [...RAW].sort((a,b) => a.GOV - b.GOV).slice(0,8);
+  const tbody = document.querySelector('#low-gov-table tbody');
+  tbody.innerHTML = sorted.map((d,i) => `
+    <tr>
+      <td><span class="rank" style="background:rgba(231,76,60,0.15);color:var(--red)">${i+1}</span></td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.VENDOR}</td>
+      <td style="color:var(--muted);font-size:11px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.CATEGORY}</td>
+      <td><span class="score-pill" style="color:var(--red);background:rgba(231,76,60,0.1)">${d.GOV}</span></td>
+      <td><span class="score-pill" style="color:${scoreColor(d.ESG_SCORE)};background:rgba(0,194,203,0.08)">${d.ESG_SCORE}</span></td>
+      <td>${perfBadge(d.PERF)}</td>
+    </tr>`).join('');
+}
+
+// ── KPI UPDATE ───────────────────────────────────────────────
+function updateKPIs() {
+  const d = filteredData;
+  const avg = d.length ? (d.reduce((s,r) => s+r.ESG_SCORE,0)/d.length).toFixed(1) : 0;
+  const high = d.filter(r => r.PERF==='High Performance').length;
+  const avgP = d.filter(r => r.PERF==='Average Performance').length;
+  const low  = d.filter(r => r.PERF==='Low Performance').length;
+  document.getElementById('kpi-total').textContent = d.length;
+  document.getElementById('kpi-avg').textContent   = avg;
+  document.getElementById('kpi-high').textContent  = high;
+  document.getElementById('kpi-avg-p').textContent = avgP;
+  document.getElementById('kpi-low').textContent   = low;
+}
+
+// ── DONUT CHART ──────────────────────────────────────────────
+let donutChart;
+function buildDonut() {
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  const high = RAW.filter(d => d.PERF==='High Performance').length;
+  const avg  = RAW.filter(d => d.PERF==='Average Performance').length;
+  const low  = RAW.filter(d => d.PERF==='Low Performance').length;
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['High Performance','Average Performance','Low Performance'],
+      datasets: [{ data: [high,avg,low],
+        backgroundColor: ['#27AE60','#F39C12','#E74C3C'],
+        borderColor: '#0B1F3A', borderWidth: 3,
+        hoverOffset: 8 }]
+    },
+    options: {
+      responsive: false, cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#112847', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          callbacks: { label: c => ` ${c.label}: ${c.raw} vendors` }
+        }
+      }
+    }
+  });
+}
+
+// ── GAUGE CHARTS ─────────────────────────────────────────────
+function buildGauge(id, value, color) {
+  const ctx = document.getElementById(id).getContext('2d');
+  const pct = value / 100;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [pct, 1 - pct],
+        backgroundColor: [color, 'rgba(255,255,255,0.06)'],
+        borderColor: 'transparent', borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: false, cutout: '72%', rotation: -90, circumference: 180,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } }
+    }
+  });
+}
+
+// ── CATEGORY BAR ─────────────────────────────────────────────
+let catChart;
+function buildCatBar() {
+  // Group by category
+  const groups = {};
+  filteredData.forEach(d => {
+    const cat = d.CATEGORY.trim();
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(d.ESG_SCORE);
+  });
+  const sorted = Object.entries(groups)
+    .map(([k,v]) => ({ cat: k, avg: v.reduce((a,b)=>a+b,0)/v.length }))
+    .sort((a,b) => b.avg - a.avg).slice(0,12);
+
+  const labels = sorted.map(d => d.cat.length > 28 ? d.cat.slice(0,26)+'…' : d.cat);
+  const values = sorted.map(d => +d.avg.toFixed(1));
+  const bgColors = values.map(v => v >= 85 ? '#27AE60' : v < 70 ? '#E74C3C' : '#00C2CB');
+
+  const ctx = document.getElementById('catBar').getContext('2d');
+  if (catChart) catChart.destroy();
+  catChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Avg ESG Score',
+        data: values,
+        backgroundColor: bgColors,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#112847', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          callbacks: { label: c => ` ESG Score: ${c.raw}` }
+        }
+      },
+      scales: {
+        x: {
+          min: 55, max: 100,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#8B9BB4', font: { size: 10 } }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: '#B0BEC5', font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+// ── HISTOGRAM ────────────────────────────────────────────────
+let histChart;
+function buildHist() {
+  const bands = [
+    { label: '60–64', min:60, max:65 },
+    { label: '65–69', min:65, max:70 },
+    { label: '70–74', min:70, max:75 },
+    { label: '75–79', min:75, max:80 },
+    { label: '80–84', min:80, max:85 },
+    { label: '85–89', min:85, max:90 },
+    { label: '90+',   min:90, max:101 },
+  ];
+  const counts = bands.map(b => filteredData.filter(d => d.ESG_SCORE >= b.min && d.ESG_SCORE < b.max).length);
+  const bgColors = bands.map(b => b.min >= 85 ? '#27AE60' : b.min < 70 ? '#E74C3C' : '#00C2CB');
+
+  const ctx = document.getElementById('histChart').getContext('2d');
+  if (histChart) histChart.destroy();
+  histChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: bands.map(b => b.label),
+      datasets: [{
+        label: 'Vendors',
+        data: counts,
+        backgroundColor: bgColors,
+        borderRadius: 8,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#112847', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          callbacks: { label: c => ` ${c.raw} vendors` }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#8B9BB4', font: { size: 11 } } },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#8B9BB4', font: { size: 10 }, stepSize: 5 }
+        }
+      }
+    }
+  });
+}
+
+// ── ALL VENDORS BAR ───────────────────────────────────────────
+let allBarChart;
+function buildAllBar() {
+  const sorted = [...filteredData].sort((a,b) => b.ESG_SCORE - a.ESG_SCORE);
+  const labels = sorted.map(d => d.VENDOR.length > 25 ? d.VENDOR.slice(0,23)+'…' : d.VENDOR);
+  const values = sorted.map(d => d.ESG_SCORE);
+  const bgColors = sorted.map(d =>
+    d.PERF === 'High Performance' ? '#27AE60' :
+    d.PERF === 'Low Performance'  ? '#E74C3C' : '#00C2CB');
+
+  const ctx = document.getElementById('allBar').getContext('2d');
+  if (allBarChart) allBarChart.destroy();
+  allBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'ESG Score',
+        data: values,
+        backgroundColor: bgColors,
+        borderRadius: 4,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#112847', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          callbacks: {
+            title: items => sorted[items[0].dataIndex].VENDOR,
+            label: c => [` ESG Score: ${c.raw}`, ` ${sorted[c.dataIndex].PERF}`]
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { display: false }
+        },
+        y: {
+          min: 55, max: 100,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#8B9BB4', font: { size: 10 } }
+        }
+      }
+    }
+  });
+  document.getElementById('ranking-sub').textContent =
+    `${sorted.length} vendors · hover bars for details · color = performance tier`;
+  document.getElementById('ranking-tag').textContent =
+    currentFilter === 'All' ? 'Full View' : currentFilter.replace(' Performance','');
+}
+
+// ── FILTER ───────────────────────────────────────────────────
+function filterPerf(perf, btn) {
+  currentFilter = perf;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filteredData = getFilteredData(perf);
+  updateKPIs();
+  buildTop10();
+  buildCatBar();
+  buildHist();
+  buildAllBar();
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+buildDonut();
+buildGauge('g1', 77.4, '#00C2CB');
+buildGauge('g2', 74.0, '#27AE60');
+buildGauge('g3', 74.6, '#F39C12');
+buildTop10();
+buildLowGov();
+updateKPIs();
+buildCatBar();
+buildHist();
+buildAllBar();
+</script>
+</body>
+</html>
