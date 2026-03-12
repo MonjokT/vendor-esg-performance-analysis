@@ -1,72 +1,59 @@
-# Joseph Terem Monjok — Data Analyst Portfolio
+# Vendor ESG Performance-Assessment & Analysis
 
-**Supply Chain Analyst · ESG Performance Analysis · Procurement Analytics**
+This project is a comprehensive Environmental, Social & Governance (ESG) 
+assessment of 64 supply chain vendors conducted as part of a Supply Chain 
+Analyst role at APEX Corporation.
 
-> 📊 Live portfolio: [MonjokT.github.io](https://MonjokT.github.io)
+As a Supply Chain Analyst at APEX Corporation, I was tasked with building a structured ESG (Environmental, Social & Governance) scoring framework to assess the performance, risk profile, and compliance readiness of our entire vendor base.
 
----
+The business challenge was clear: APEX had no standardised way of measuring vendor sustainability, ethical conduct, or environmental responsibility across its 64 active supply chain partners. Procurement decisions were largely driven by cost and availability — with no visibility into governance risk or long-term supplier viability.
 
-## 👋 About Me
+My role was to design and execute the full analytical pipeline — from data collection and cleaning, through scoring and segmentation, to visualisation and actionable recommendations for the procurement team and senior leadership.
 
-I'm Joseph Terem Monjok, a Supply Chain Analyst with hands-on experience in vendor performance analysis, ESG scoring frameworks, procurement risk assessment, and data-driven reporting. I turn raw supply chain data into clear, actionable insights for decision-makers.
-
-📧 Josephmonjok16@gmail.com
-🔗 [linkedin.com/in/Monjok Joseph](https://linkedin.com/in/Monjok%20Joseph)
-💻 [github.com/MonjokT](https://github.com/MonjokT)
-
----
-
-## 📁 Projects
-
-### 01 · APEX Vendor ESG Performance Analysis
-**Role:** Supply Chain Analyst
-**Tools:** Microsoft Excel · Pivot Tables · Conditional Formatting · HTML · Chart.js · Python
-
-A comprehensive ESG (Environmental, Social & Governance) assessment of 64 supply chain vendors for APEX Corporation. Designed and executed the full analytical pipeline — from scoring framework design and data cleaning, through segmentation and risk analysis, to an interactive dashboard and executive report.
-
-**Key results:**
-- 62 of 64 vendors assessed (96.9% completion rate)
-- Average ESG Score: **77.4 / 100**
-- Identified **10 high-performing vendors** (ESG ≥ 85) for strategic partnership
-- Flagged **8 vendors** with critical governance scores below 70
-- Delivered Excel workbook (7 sheets), interactive HTML dashboard, and written portfolio
-
-🔗 [View Case Study](https://MonjokT.github.io/index.html)
-📊 [View Interactive Dashboard](https://MonjokT.github.io/apex-esg-dashboard.html)
+## 🔗 View the full case study and live dashboard here:
+👉file:///C:/Users/Hp%20User/Downloads/portfolio_apex_esg.html#
 
 ---
 
-## 🛠 Skills & Tools
+## 📊 What the Excel File Contains
 
-| Category | Tools |
-|---|---|
-| Data Analysis | Microsoft Excel, Pivot Tables, AVERAGEIF, COUNTIF, RANK, nested IF |
-| Visualisation | Excel Charts, Conditional Formatting, HTML/CSS/JS, Chart.js |
-| Supply Chain | Vendor Management, ESG Scoring, Procurement Risk, Category Analysis |
-| Programming | Python (pandas, openpyxl) |
-| Reporting | Executive Dashboards, Written Reports, Data Storytelling |
+The workbook contains 7 structured sheets:
+
+- **Cleaned Vendor ESG Data** — The full dataset of 64 vendors with their 
+  Environmental, Governance, and Overall ESG scores, assessment status, 
+  observed strengths, and corrective action recommendations.
+
+- **Top 10 Performing Vendors** — A ranked summary of the 10 vendors who 
+  scored 85 and above on the Overall ESG Score.
+
+- **Vendors with Low Governance** — A focused view of vendors whose 
+  Governance pillar score fell below 70, flagged for corrective action.
+
+- **Vendor Category Analysis** — Average ESG scores and vendor counts 
+  broken down by supply category (45 categories total).
+
+- **Least Performing Vendors** — Bottom vendors ranked by Governance score, 
+  highlighting the highest-risk suppliers.
+
+- **Overall Performance Status** — A distribution summary showing how many 
+  vendors fall into each performance tier (High / Average / Low).
 
 ---
 
-## 📂 Repository Structure
-
-```
-MonjokT.github.io/
-│
-├── index.html                  ← Portfolio case study (this page)
-├── apex-esg-dashboard.html     ← Interactive ESG dashboard
-├── README.md                   ← You are here
-```
+## 🛠 Tools Used
+- Microsoft Excel (Pivot Tables, Conditional Formatting, AVERAGEIF, 
+  COUNTIF, RANK, nested IF formulas)
+- HTML / CSS / JavaScript
+- Chart.js
+- Python (pandas, openpyxl)
 
 ---
 
 ## 📬 Contact
+**Joseph Terem Monjok**  
+📧 Josephmonjok16@gmail.com  
+🔗 linkedin.com/in/Monjok Joseph
 
-I'm open to Supply Chain Analyst, Data Analyst, and Procurement Analytics roles.
-
-- **Email:** Josephmonjok16@gmail.com
-- **LinkedIn:** [linkedin.com/in/Monjok Joseph](https://linkedin.com/in/Monjok%20Joseph)
-- **GitHub:** [github.com/MonjokT](https://github.com/MonjokT)
 
 ---
 
