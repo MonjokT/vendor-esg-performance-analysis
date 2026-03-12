@@ -4,7 +4,6 @@ This project is a comprehensive Environmental, Social & Governance (ESG)
 assessment of 64 supply chain vendors conducted as part of a Supply Chain 
 Analyst role at APEX Corporation.
 
-What this project is about
 As a Supply Chain Analyst at APEX Corporation, I was tasked with building a structured ESG (Environmental, Social & Governance) scoring framework to assess the performance, risk profile, and compliance readiness of our entire vendor base.
 
 The business challenge was clear: APEX had no standardised way of measuring vendor sustainability, ethical conduct, or environmental responsibility across its 64 active supply chain partners. Procurement decisions were largely driven by cost and availability — with no visibility into governance risk or long-term supplier viability.
